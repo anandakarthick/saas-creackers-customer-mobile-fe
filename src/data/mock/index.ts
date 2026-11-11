@@ -1,0 +1,11 @@
+export { mockCategories } from './categories';
+export { mockProducts } from './products';
+export { mockCustomers } from './customers';
+export { mockOrders } from './orders';
+export { mockBranches } from './branches';
+export { mockEmployees } from './employees';
+export { mockRoles, mockPermissions } from './roles';
+export { mockSuppliers } from './suppliers';
+export { mockPurchaseOrders } from './purchaseOrders';
+export { mockBanners, mockOffers, mockSocialMediaPosts } from './marketing';
+export { mockNotifications } from './notifications';

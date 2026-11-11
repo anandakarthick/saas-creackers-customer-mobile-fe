@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "684774766687",
+    "project_id": "saas-mobile-ee413",
+    "storage_bucket": "saas-mobile-ee413.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:684774766687:android:ea345013a0b335b6fbc3ea",
+        "android_client_info": {
+          "package_name": "com.saasmobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzo-4e3S02XYDJEN9EEjLGcBEg_lLtVho"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

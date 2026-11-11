@@ -147,3 +147,27 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# ---- React Native / Android build output (added to fix large-file push) ----
+# Gradle & native (CMake/CXX) build dirs
+.gradle/
+build/
+android/.gradle/
+android/build/
+android/app/build/
+**/.cxx/
+*.hprof
+local.properties
+
+# Signing — keep the shared debug keystore, ignore any other keystores
+*.keystore
+!debug.keystore
+
+# Packaged apps / bundles (build outputs — distribute via the admin UI, not git)
+*.apk
+*.aab
+*.jsbundle
+
+# iOS build output
+ios/build/
+ios/Pods/

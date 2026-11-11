@@ -1,0 +1,112 @@
+import React, { useCallback, useState } from 'react';
+import { StyleSheet, View, Text, FlatList, ActivityIndicator } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useQuery } from '@tanstack/react-query';
+import { useFocusEffect } from '@react-navigation/native';
+import { ScreenWrapper, Header } from '@/components/layout';
+import { Empty } from '@/components/common';
+import { useTheme } from '@/theme';
+import { spacing, borderRadius } from '@/theme/spacing';
+import { reportsApi } from '@/services/api';
+import { formatDate } from '@/utils';
+import { ReportDateRange, presetToRange, type RangePreset } from '../components/ReportDateRange';
+
+export const AdjustmentsReportScreen: React.FC = () => {
+  const { colors } = useTheme();
+  const [range, setRange] = useState<RangePreset>('30d');
+  const { data = [], isLoading, isError, error, isFetching, refetch } = useQuery({
+    queryKey: ['report', 'adjustments', range],
+    queryFn: () => reportsApi.getAdjustmentsReport(presetToRange(range)),
+  });
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [])
+  );
+
+  const onRefresh = useCallback(async () => { await refetch(); }, [refetch]);
+  const items = Array.isArray(data) ? data : (data as any)?.data ?? [];
+  const positives = items.filter((r: any) => (Number(r.quantity) || 0) >= 0).length;
+  const negatives = items.length - positives;
+
+  return (
+    <ScreenWrapper scrollable={false} padding={false}>
+      <Header title="Stock Adjustments" showBack />
+      <ReportDateRange value={range} onChange={setRange} />
+
+      <View style={styles.statsRow}>
+        <View style={[styles.statCard, { backgroundColor: colors.surface.default }]}>
+          <Text style={[styles.statValue, { color: colors.text.primary }]}>{items.length}</Text>
+          <Text style={[styles.statLabel, { color: colors.text.secondary }]}>Total</Text>
+        </View>
+        <View style={[styles.statCard, { backgroundColor: colors.surface.default }]}>
+          <Text style={[styles.statValue, { color: colors.success.main }]}>+{positives}</Text>
+          <Text style={[styles.statLabel, { color: colors.text.secondary }]}>Increases</Text>
+        </View>
+        <View style={[styles.statCard, { backgroundColor: colors.surface.default }]}>
+          <Text style={[styles.statValue, { color: colors.error.main }]}>-{negatives}</Text>
+          <Text style={[styles.statLabel, { color: colors.text.secondary }]}>Decreases</Text>
+        </View>
+      </View>
+
+      {isLoading ? (
+        <View style={styles.loadingCenter}><ActivityIndicator color={colors.primary.main} /></View>
+      ) : isError ? (
+        <Empty icon="cloud-alert" title="Couldn't load report" description={String((error as any)?.message || '')} />
+      ) : (
+        <FlatList
+          data={items}
+          keyExtractor={(it: any) => String(it.id)}
+          contentContainerStyle={styles.list}
+          refreshing={isFetching}
+          onRefresh={onRefresh}
+          renderItem={({ item }) => {
+            const pos = (Number(item.quantity) || 0) >= 0;
+            return (
+              <View style={[styles.row, { backgroundColor: colors.surface.default }]}>
+                <View style={[styles.rowIcon, { backgroundColor: colors.secondary.light + '20' }]}>
+                  <Icon name={pos ? 'plus-circle' : 'minus-circle'} size={20} color={pos ? colors.success.main : colors.error.main} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.rowTitle, { color: colors.text.primary }]} numberOfLines={1}>{item.product?.name || 'Unknown Product'}</Text>
+                  <Text style={[styles.rowSub, { color: colors.text.secondary }]} numberOfLines={1}>{item.notes || 'Adjustment'}</Text>
+                  <Text style={[styles.rowMeta, { color: colors.text.tertiary }]}>{formatDate(item.createdAt)} • Ref {item.reference || '—'}</Text>
+                </View>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={[styles.qty, { color: pos ? colors.success.main : colors.error.main }]}>
+                    {pos ? '+' : ''}{item.quantity}
+                  </Text>
+                  <Text style={[styles.rowMeta, { color: colors.text.tertiary }]}>{item.prevQty} → {item.newQty}</Text>
+                </View>
+              </View>
+            );
+          }}
+          ListEmptyComponent={<Empty icon="swap-horizontal" title="No adjustments" description="No data for this range" />}
+        />
+      )}
+    </ScreenWrapper>
+  );
+};
+
+const styles = StyleSheet.create({
+  loadingCenter: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  statsRow: { flexDirection: 'row', paddingHorizontal: spacing[4], marginBottom: spacing[2], gap: spacing[2] },
+  statCard: { flex: 1, borderRadius: borderRadius.md, padding: spacing[3], alignItems: 'center' },
+  statValue: { fontSize: 14, fontWeight: '700' },
+  statLabel: { fontSize: 11, marginTop: 2 },
+  list: { padding: spacing[4], paddingBottom: spacing[8] },
+  row: {
+    flexDirection: 'row', alignItems: 'center',
+    borderRadius: borderRadius.md,
+    padding: spacing[3], marginBottom: spacing[2],
+  },
+  rowIcon: {
+    width: 36, height: 36, borderRadius: 18,
+    justifyContent: 'center', alignItems: 'center', marginRight: spacing[3],
+  },
+  rowTitle: { fontSize: 14, fontWeight: '600' },
+  rowSub: { fontSize: 12, marginTop: 2 },
+  rowMeta: { fontSize: 11, marginTop: 2 },
+  qty: { fontSize: 16, fontWeight: '700' },
+});
